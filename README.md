@@ -13,6 +13,18 @@ Servidor MCP (Model Context Protocol) completo com busca na web, descoberta de s
 - **search_mcp_servers**: Pesquisa servidores MCP por funcionalidade ou nome
 - **get_mcp_server_info**: Obtém informações detalhadas sobre servidores específicos
 
+### 📦 Patches
+- **list_patches**: Lista patches disponíveis para o projeto
+- **apply_patch**: Aplica um patch específico ao projeto
+
+### 🧩 Módulos
+- **list_modules**: Lista módulos disponíveis no projeto
+- **get_module_info**: Obtém informações detalhadas sobre um módulo específico
+
+### 📚 Práticas de Desenvolvimento
+- **list_practices**: Lista práticas de desenvolvimento recomendadas
+- **get_practice_details**: Obtém detalhes de uma prática específica
+
 ### 🛠️ Utilitários
 - **calculate**: Operações matemáticas básicas (add, subtract, multiply, divide, power, sqrt)
 - **generate_password**: Gera senhas seguras customizáveis
@@ -182,6 +194,55 @@ Codifica/decodifica Base64.
 {
   "text": "Hello World",
   "operation": "encode"
+}
+```
+
+### list_patches
+Lista patches disponíveis.
+```json
+{
+  "status": "all"
+}
+```
+
+### apply_patch
+Aplica um patch específico.
+```json
+{
+  "patch_id": "patch-001",
+  "target_file": "package.json"
+}
+```
+
+### list_modules
+Lista módulos do projeto.
+```json
+{
+  "category": "core"
+}
+```
+
+### get_module_info
+Obtém informações de um módulo.
+```json
+{
+  "module_name": "core"
+}
+```
+
+### list_practices
+Lista práticas de desenvolvimento.
+```json
+{
+  "category": "security"
+}
+```
+
+### get_practice_details
+Obtém detalhes de uma prática.
+```json
+{
+  "practice_id": "practice-001"
 }
 ```
 

@@ -1,0 +1,47 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+*.md
+.env
+.env.local
+.nyc_output
+coverage
+.nyc_output
+.eslintcache
+.DS_Store
+Thumbs.db
+build
+dist
+docs/.vitepress/dist
+logs
+uploads
+temp
+tmp
+</arg_value>
+<task_progress>
+- [x] Stop running server
+- [x] Create new project structure following Clean Architecture
+- [x] Update package.json with modern dependencies
+- [x] Create tsconfig.json
+- [x] Create .env.example
+- [x] Create .eslintrc.json
+- [x] Create .prettierrc
+- [x] Create .gitignore
+- [x] Create Dockerfile
+- [x] Create docker-compose.yml
+- [ ] Create configuration files
+- [ ] Implement core infrastructure (config, logger, events, cache)
+- [ ] Implement database layer with Prisma
+- [ ] Implement authentication and security
+- [ ] Implement tool system with dynamic registration
+- [ ] Implement resource system
+- [ ] Implement prompt system
+- [ ] Implement plugin system
+- [ ] Implement existing tools (patches, modules, practices, web search)
+- [ ] Implement CLI
+- [ ] Create Docker configuration
+- [ ] Add tests
+- [ ] Update documentation
+</task_progress>
+</write_to_file></tool_call>

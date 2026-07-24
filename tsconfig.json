@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
     "outDir": "./build",
     "rootDir": "./src",
     "strict": true,
@@ -12,8 +13,32 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "removeComments": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@core/*": ["./src/core/*"],
+      "@server/*": ["./src/server/*"],
+      "@tools/*": ["./src/tools/*"],
+      "@resources/*": ["./src/resources/*"],
+      "@prompts/*": ["./src/prompts/*"],
+      "@plugins/*": ["./src/plugins/*"],
+      "@services/*": ["./src/services/*"],
+      "@providers/*": ["./src/providers/*"],
+      "@database/*": ["./src/database/*"],
+      "@cache/*": ["./src/cache/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@cli/*": ["./src/cli/*"],
+      "@middleware/*": ["./src/middleware/*"],
+      "@auth/*": ["./src/auth/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build"]
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

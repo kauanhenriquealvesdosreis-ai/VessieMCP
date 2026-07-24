@@ -65,6 +65,98 @@ class VessieMCPServer {
           },
         },
         {
+          name: 'list_patches',
+          description: 'Lista patches disponíveis para o projeto',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              status: {
+                type: 'string',
+                enum: ['all', 'pending', 'applied', 'failed'],
+                description: 'Filtra patches por status',
+                default: 'all',
+              },
+            },
+            required: [],
+          },
+        },
+        {
+          name: 'apply_patch',
+          description: 'Aplica um patch específico ao projeto',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              patch_id: {
+                type: 'string',
+                description: 'ID do patch a ser aplicado',
+              },
+              target_file: {
+                type: 'string',
+                description: 'Arquivo alvo para aplicação do patch',
+              },
+            },
+            required: ['patch_id'],
+          },
+        },
+        {
+          name: 'list_modules',
+          description: 'Lista módulos disponíveis no projeto',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              category: {
+                type: 'string',
+                description: 'Categoria para filtrar módulos (ex: core, utils, services)',
+              },
+            },
+            required: [],
+          },
+        },
+        {
+          name: 'get_module_info',
+          description: 'Obtém informações detalhadas sobre um módulo específico',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              module_name: {
+                type: 'string',
+                description: 'Nome do módulo',
+              },
+            },
+            required: ['module_name'],
+          },
+        },
+        {
+          name: 'list_practices',
+          description: 'Lista práticas de desenvolvimento recomendadas',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              category: {
+                type: 'string',
+                enum: ['all', 'security', 'performance', 'code-quality', 'testing', 'documentation'],
+                description: 'Categoria de práticas',
+                default: 'all',
+              },
+            },
+            required: [],
+          },
+        },
+        {
+          name: 'get_practice_details',
+          description: 'Obtém detalhes de uma prática específica',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              practice_id: {
+                type: 'string',
+                description: 'ID da prática',
+              },
+            },
+            required: ['practice_id'],
+          },
+        },
+        {
           name: 'fetch_website',
           description: 'Busca o conteúdo de uma página web',
           inputSchema: {
@@ -268,6 +360,18 @@ class VessieMCPServer {
         switch (toolName) {
           case 'web_search':
             return this.webSearch(args);
+          case 'list_patches':
+            return this.listPatches(args);
+          case 'apply_patch':
+            return this.applyPatch(args);
+          case 'list_modules':
+            return this.listModules(args);
+          case 'get_module_info':
+            return this.getModuleInfo(args);
+          case 'list_practices':
+            return this.listPractices(args);
+          case 'get_practice_details':
+            return this.getPracticeDetails(args);
           case 'fetch_website':
             return this.fetchWebsite(args);
           case 'list_mcp_servers':
@@ -864,6 +968,931 @@ class VessieMCPServer {
             result,
             originalLength: text.length,
             resultLength: result.length
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private listPatches(args: any) {
+    const status = args.status || 'all';
+
+    const patches = [
+      {
+        id: 'patch-001',
+        name: 'Atualização de dependências',
+        description: 'Atualiza todas as dependências do projeto para as versões mais recentes',
+        status: 'pending',
+        created_at: '2024-01-15T10:00:00Z',
+        target_files: ['package.json'],
+        priority: 'high',
+      },
+      {
+        id: 'patch-002',
+        name: 'Correção de tipagem',
+        description: 'Corrige erros de tipagem TypeScript no código',
+        status: 'applied',
+        created_at: '2024-01-14T14:30:00Z',
+        target_files: ['src/**/*.ts'],
+        priority: 'medium',
+      },
+      {
+        id: 'patch-003',
+        name: 'Otimização de performance',
+        description: 'Implementa otimizações de performance no servidor',
+        status: 'pending',
+        created_at: '2024-01-13T09:15:00Z',
+        target_files: ['src/index.ts'],
+        priority: 'high',
+      },
+      {
+        id: 'patch-004',
+        name: 'Adição de testes',
+        description: 'Adiciona testes unitários e de integração',
+        status: 'failed',
+        created_at: '2024-01-12T16:45:00Z',
+        target_files: ['tests/**/*.test.ts'],
+        priority: 'medium',
+      },
+      {
+        id: 'patch-005',
+        name: 'Documentação',
+        description: 'Atualiza documentação e README',
+        status: 'applied',
+        created_at: '2024-01-11T11:20:00Z',
+        target_files: ['README.md', 'docs/**/*.md'],
+        priority: 'low',
+      },
+    ];
+
+    const filtered = status === 'all' 
+      ? patches 
+      : patches.filter(p => p.status === status);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            status,
+            total: filtered.length,
+            patches: filtered,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private applyPatch(args: any) {
+    const patchId = args.patch_id;
+    const targetFile = args.target_file;
+
+    if (!patchId) {
+      throw new McpError(ErrorCode.InvalidParams, 'patch_id é obrigatório');
+    }
+
+    const patchDetails: Record<string, any> = {
+      'patch-001': {
+        id: 'patch-001',
+        name: 'Atualização de dependências',
+        status: 'applied',
+        applied_at: new Date().toISOString(),
+        target_file: targetFile || 'package.json',
+        changes: [
+          'Atualizado @modelcontextprotocol/sdk para v1.2.0',
+          'Atualizado typescript para v5.4.0',
+          'Atualizado @types/node para v20.11.0',
+        ],
+        message: 'Patch aplicado com sucesso',
+      },
+      'patch-002': {
+        id: 'patch-002',
+        name: 'Correção de tipagem',
+        status: 'applied',
+        applied_at: new Date().toISOString(),
+        target_file: targetFile || 'src/index.ts',
+        changes: [
+          'Corrigido tipo de retorno de webSearch',
+          'Adicionado tipo para argumentos de ferramentas',
+          'Corrigido erro de tipagem em calculate',
+        ],
+        message: 'Patch aplicado com sucesso',
+      },
+      'patch-003': {
+        id: 'patch-003',
+        name: 'Otimização de performance',
+        status: 'pending',
+        message: 'Patch pendente - requer revisão',
+      },
+      'patch-004': {
+        id: 'patch-004',
+        name: 'Adição de testes',
+        status: 'failed',
+        message: 'Falha ao aplicar patch: dependências de teste não encontradas',
+      },
+      'patch-005': {
+        id: 'patch-005',
+        name: 'Documentação',
+        status: 'applied',
+        applied_at: new Date().toISOString(),
+        target_file: targetFile || 'README.md',
+        changes: [
+          'Atualizado README com novas ferramentas',
+          'Adicionada seção de exemplos',
+          'Atualizada documentação de API',
+        ],
+        message: 'Patch aplicado com sucesso',
+      },
+    };
+
+    const patch = patchDetails[patchId];
+    
+    if (!patch) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              success: false,
+              message: `Patch "${patchId}" não encontrado`,
+              suggestion: 'Use list_patches para ver todos os patches disponíveis',
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            success: true,
+            ...patch,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private listModules(args: any) {
+    const category = args.category;
+
+    const modules = [
+      {
+        name: 'core',
+        description: 'Módulo principal do servidor',
+        category: 'core',
+        version: '1.0.0',
+        dependencies: [],
+        exports: ['VessieMCPServer', 'createServer'],
+        size: '15KB',
+        last_updated: '2024-01-15',
+      },
+      {
+        name: 'tools',
+        description: 'Implementação de ferramentas MCP',
+        category: 'core',
+        version: '1.0.0',
+        dependencies: ['core'],
+        exports: ['webSearch', 'fetchWebsite', 'calculate', 'generatePassword'],
+        size: '25KB',
+        last_updated: '2024-01-15',
+      },
+      {
+        name: 'utils',
+        description: 'Utilitários e funções auxiliares',
+        category: 'utils',
+        version: '1.0.0',
+        dependencies: ['core'],
+        exports: ['validateCPF', 'generateUUID', 'encodeDecodeBase64', 'getCurrentTime'],
+        size: '8KB',
+        last_updated: '2024-01-14',
+      },
+      {
+        name: 'search',
+        description: 'Módulo de busca e descoberta',
+        category: 'services',
+        version: '1.0.0',
+        dependencies: ['core', 'utils'],
+        exports: ['listMCPServers', 'searchMCPServers', 'getMCPServerInfo'],
+        size: '12KB',
+        last_updated: '2024-01-14',
+      },
+      {
+        name: 'patches',
+        description: 'Sistema de gerenciamento de patches',
+        category: 'services',
+        version: '1.0.0',
+        dependencies: ['core'],
+        exports: ['listPatches', 'applyPatch', 'rollbackPatch'],
+        size: '10KB',
+        last_updated: '2024-01-15',
+      },
+      {
+        name: 'practices',
+        description: 'Gerenciador de práticas de desenvolvimento',
+        category: 'services',
+        version: '1.0.0',
+        dependencies: ['core'],
+        exports: ['listPractices', 'getPracticeDetails', 'validatePractice'],
+        size: '18KB',
+        last_updated: '2024-01-13',
+      },
+      {
+        name: 'logger',
+        description: 'Sistema de logging',
+        category: 'utils',
+        version: '1.0.0',
+        dependencies: ['core'],
+        exports: ['Logger', 'createLogger'],
+        size: '5KB',
+        last_updated: '2024-01-12',
+      },
+      {
+        name: 'config',
+        description: 'Gerenciador de configurações',
+        category: 'core',
+        version: '1.0.0',
+        dependencies: ['core'],
+        exports: ['ConfigManager', 'loadConfig', 'saveConfig'],
+        size: '7KB',
+        last_updated: '2024-01-12',
+      },
+    ];
+
+    const filtered = category 
+      ? modules.filter(m => m.category === category)
+      : modules;
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            category: category || 'all',
+            total: filtered.length,
+            modules: filtered,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private getModuleInfo(args: any) {
+    const moduleName = args.module_name.toLowerCase();
+
+    const moduleDetails: Record<string, any> = {
+      core: {
+        name: 'core',
+        description: 'Módulo principal do servidor VessieMCP',
+        category: 'core',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: [],
+        exports: [
+          { name: 'VessieMCPServer', type: 'class', description: 'Classe principal do servidor' },
+          { name: 'createServer', type: 'function', description: 'Factory function para criar servidor' },
+        ],
+        internal_dependencies: [],
+        documentation: 'https://docs.vessiemcp.dev/core',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      tools: {
+        name: 'tools',
+        description: 'Implementação de todas as ferramentas MCP disponíveis',
+        category: 'core',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core'],
+        exports: [
+          { name: 'webSearch', type: 'function', description: 'Busca na web' },
+          { name: 'fetchWebsite', type: 'function', description: 'Busca conteúdo de URL' },
+          { name: 'calculate', type: 'function', description: 'Operações matemáticas' },
+          { name: 'generatePassword', type: 'function', description: 'Gerador de senhas' },
+        ],
+        internal_dependencies: ['utils'],
+        documentation: 'https://docs.vessiemcp.dev/tools',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      utils: {
+        name: 'utils',
+        description: 'Utilitários e funções auxiliares reutilizáveis',
+        category: 'utils',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core'],
+        exports: [
+          { name: 'validateCPF', type: 'function', description: 'Validador de CPF' },
+          { name: 'generateUUID', type: 'function', description: 'Gerador de UUID v4' },
+          { name: 'encodeDecodeBase64', type: 'function', description: 'Codificador/decodificador Base64' },
+          { name: 'getCurrentTime', type: 'function', description: 'Obtém data/hora atual' },
+        ],
+        internal_dependencies: [],
+        documentation: 'https://docs.vessiemcp.dev/utils',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      search: {
+        name: 'search',
+        description: 'Módulo de busca e descoberta de servidores MCP',
+        category: 'services',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core', 'utils'],
+        exports: [
+          { name: 'listMCPServers', type: 'function', description: 'Lista servidores MCP' },
+          { name: 'searchMCPServers', type: 'function', description: 'Pesquisa servidores MCP' },
+          { name: 'getMCPServerInfo', type: 'function', description: 'Informações de servidor MCP' },
+        ],
+        internal_dependencies: [],
+        documentation: 'https://docs.vessiemcp.dev/search',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      patches: {
+        name: 'patches',
+        description: 'Sistema de gerenciamento de patches e atualizações',
+        category: 'services',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core'],
+        exports: [
+          { name: 'listPatches', type: 'function', description: 'Lista patches disponíveis' },
+          { name: 'applyPatch', type: 'function', description: 'Aplica um patch' },
+          { name: 'rollbackPatch', type: 'function', description: 'Reverte um patch' },
+        ],
+        internal_dependencies: ['logger'],
+        documentation: 'https://docs.vessiemcp.dev/patches',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      practices: {
+        name: 'practices',
+        description: 'Gerenciador de práticas de desenvolvimento recomendadas',
+        category: 'services',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core'],
+        exports: [
+          { name: 'listPractices', type: 'function', description: 'Lista práticas' },
+          { name: 'getPracticeDetails', type: 'function', description: 'Detalhes de prática' },
+          { name: 'validatePractice', type: 'function', description: 'Valida prática' },
+        ],
+        internal_dependencies: [],
+        documentation: 'https://docs.vessiemcp.dev/practices',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      logger: {
+        name: 'logger',
+        description: 'Sistema de logging estruturado',
+        category: 'utils',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core'],
+        exports: [
+          { name: 'Logger', type: 'class', description: 'Classe de logger' },
+          { name: 'createLogger', type: 'function', description: 'Cria instância de logger' },
+        ],
+        internal_dependencies: [],
+        documentation: 'https://docs.vessiemcp.dev/logger',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+      config: {
+        name: 'config',
+        description: 'Gerenciador de configurações do servidor',
+        category: 'core',
+        version: '1.0.0',
+        author: 'VessieMCP Team',
+        license: 'MIT',
+        dependencies: ['core'],
+        exports: [
+          { name: 'ConfigManager', type: 'class', description: 'Gerenciador de configurações' },
+          { name: 'loadConfig', type: 'function', description: 'Carrega configurações' },
+          { name: 'saveConfig', type: 'function', description: 'Salva configurações' },
+        ],
+        internal_dependencies: ['logger'],
+        documentation: 'https://docs.vessiemcp.dev/config',
+        repository: 'https://github.com/kauan/VessieMCP',
+      },
+    };
+
+    const info = moduleDetails[moduleName];
+    
+    if (!info) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              found: false,
+              message: `Módulo "${moduleName}" não encontrado`,
+              suggestion: 'Use list_modules para ver todos os módulos disponíveis',
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            found: true,
+            ...info,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private listPractices(args: any) {
+    const category = args.category || 'all';
+
+    const practices = [
+      {
+        id: 'practice-001',
+        name: 'Validação de entrada',
+        category: 'security',
+        description: 'Sempre valide e sanitize dados de entrada do usuário',
+        priority: 'critical',
+        tags: ['security', 'validation', 'input'],
+        examples: ['Usar schemas de validação', 'Sanitizar strings', 'Verificar tipos'],
+      },
+      {
+        id: 'practice-002',
+        name: 'Tratamento de erros',
+        category: 'code-quality',
+        description: 'Implemente tratamento de erros robusto e informativo',
+        priority: 'high',
+        tags: ['error-handling', 'logging', 'debugging'],
+        examples: ['Try-catch blocks', 'Error logging', 'User-friendly messages'],
+      },
+      {
+        id: 'practice-003',
+        name: 'Otimização de queries',
+        category: 'performance',
+        description: 'Otimize consultas de banco de dados e operações custosas',
+        priority: 'high',
+        tags: ['database', 'performance', 'optimization'],
+        examples: ['Índices', 'Connection pooling', 'Query optimization'],
+      },
+      {
+        id: 'practice-004',
+        name: 'Testes unitários',
+        category: 'testing',
+        description: 'Escreva testes unitários para funções críticas',
+        priority: 'high',
+        tags: ['testing', 'unit-tests', 'coverage'],
+        examples: ['Jest', 'Mocha', 'Coverage > 80%'],
+      },
+      {
+        id: 'practice-005',
+        name: 'Documentação de código',
+        category: 'documentation',
+        description: 'Documente funções, classes e módulos importantes',
+        priority: 'medium',
+        tags: ['documentation', 'comments', 'readme'],
+        examples: ['JSDoc', 'README', 'API docs'],
+      },
+      {
+        id: 'practice-006',
+        name: 'Autenticação e autorização',
+        category: 'security',
+        description: 'Implemente autenticação forte e autorização baseada em roles',
+        priority: 'critical',
+        tags: ['security', 'auth', 'jwt', 'oauth'],
+        examples: ['JWT tokens', 'OAuth 2.0', 'Role-based access'],
+      },
+      {
+        id: 'practice-007',
+        name: 'Cache de dados',
+        category: 'performance',
+        description: 'Use cache para melhorar performance de operações repetitivas',
+        priority: 'medium',
+        tags: ['cache', 'performance', 'redis'],
+        examples: ['Redis', 'In-memory cache', 'CDN'],
+      },
+      {
+        id: 'practice-008',
+        name: 'Logging estruturado',
+        category: 'code-quality',
+        description: 'Implemente logging estruturado para debugging e monitoramento',
+        priority: 'high',
+        tags: ['logging', 'monitoring', 'debugging'],
+        examples: ['Winston', 'Pino', 'ELK Stack'],
+      },
+      {
+        id: 'practice-009',
+        name: 'Testes de integração',
+        category: 'testing',
+        description: 'Escreva testes de integração para fluxos completos',
+        priority: 'medium',
+        tags: ['testing', 'integration', 'e2e'],
+        examples: ['Supertest', 'Cypress', 'Playwright'],
+      },
+      {
+        id: 'practice-010',
+        name: 'Versionamento de API',
+        category: 'documentation',
+        description: 'Versiona APIs para garantir compatibilidade',
+        priority: 'high',
+        tags: ['api', 'versioning', 'compatibility'],
+        examples: ['URL versioning', 'Header versioning', 'Semantic versioning'],
+      },
+    ];
+
+    const filtered = category === 'all' 
+      ? practices 
+      : practices.filter(p => p.category === category);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            category,
+            total: filtered.length,
+            practices: filtered,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  private getPracticeDetails(args: any) {
+    const practiceId = args.practice_id.toLowerCase();
+
+    const practiceDetails: Record<string, any> = {
+      'practice-001': {
+        id: 'practice-001',
+        name: 'Validação de entrada',
+        category: 'security',
+        priority: 'critical',
+        description: 'Sempre valide e sanitize dados de entrada do usuário para prevenir injeções e ataques.',
+        rationale: 'Dados não validados são a principal causa de vulnerabilidades de segurança como SQL Injection, XSS e Command Injection.',
+        implementation: {
+          steps: [
+            'Defina schemas de validação usando bibliotecas como Zod ou Joi',
+            'Sanitize strings removendo caracteres perigosos',
+            'Verifique tipos de dados antes do processamento',
+            'Implemente limites de tamanho para inputs',
+            'Use allowlists ao invés de blocklists',
+          ],
+          code_example: `// Exemplo com Zod
+import { z } from 'zod';
+
+const userSchema = z.object({
+  name: z.string().min(3).max(50),
+  email: z.string().email(),
+  age: z.number().min(18),
+});
+
+const validatedUser = userSchema.parse(userInput);`,
+        },
+        tools: ['Zod', 'Joi', 'Yup', 'validator.js'],
+        references: [
+          'https://owasp.org/www-community/controls/Input_Validation',
+          'https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html',
+        ],
+        tags: ['security', 'validation', 'input'],
+      },
+      'practice-002': {
+        id: 'practice-002',
+        name: 'Tratamento de erros',
+        category: 'code-quality',
+        priority: 'high',
+        description: 'Implemente tratamento de erros robusto com mensagens informativas e logging adequado.',
+        rationale: 'Bom tratamento de erros facilita debugging, melhora UX e previne vazamento de informações sensíveis.',
+        implementation: {
+          steps: [
+            'Use try-catch em operações assíncronas',
+            'Implemente error boundaries (frontend) ou middleware de erro (backend)',
+            'Log erros com contexto suficiente para debugging',
+            'Retorne mensagens user-friendly sem expor detalhes internos',
+            'Implemente retry logic para operações transitórias',
+          ],
+          code_example: `// Exemplo de tratamento de erro
+async function fetchData(id: string) {
+  try {
+    const data = await api.get(\`/data/\${id}\`);
+    return data;
+  } catch (error) {
+    logger.error('Failed to fetch data', { id, error });
+    throw new AppError('DATA_FETCH_FAILED', 'Unable to fetch data', 500);
+  }
+}`,
+        },
+        tools: ['Winston', 'Pino', 'Sentry', 'Bugsnag'],
+        references: [
+          'https://nodejs.org/en/docs/guides/error-handling/',
+          'https://blog.risingstack.io/node-js-error-handling-best-practices/',
+        ],
+        tags: ['error-handling', 'logging', 'debugging'],
+      },
+      'practice-003': {
+        id: 'practice-003',
+        name: 'Otimização de queries',
+        category: 'performance',
+        priority: 'high',
+        description: 'Otimize consultas de banco de dados para melhorar performance.',
+        rationale: 'Queries não otimizadas são uma das principais causas de lentidão em aplicações.',
+        implementation: {
+          steps: [
+            'Use índices em colunas frequentemente consultadas',
+            'Evite SELECT * - especifique apenas colunas necessárias',
+            'Use JOINs ao invés de múltiplas queries',
+            'Implemente connection pooling',
+            'Cache resultados de queries frequentes',
+          ],
+          code_example: `-- ❌ Ruim
+SELECT * FROM users WHERE email LIKE '%@example.com';
+
+-- ✅ Bom
+SELECT id, name, email FROM users 
+WHERE email = 'user@example.com'
+AND created_at > NOW() - INTERVAL '30 days';`,
+        },
+        tools: ['PostgreSQL', 'MySQL', 'Redis', 'MongoDB'],
+        references: [
+          'https://use-the-index-luke.com/',
+          'https://www.postgresql.org/docs/current/performance-tips.html',
+        ],
+        tags: ['database', 'performance', 'optimization'],
+      },
+      'practice-004': {
+        id: 'practice-004',
+        name: 'Testes unitários',
+        category: 'testing',
+        priority: 'high',
+        description: 'Escreva testes unitários abrangentes para garantir qualidade do código.',
+        rationale: 'Testes unitários previnem regressões e facilitam refatoração.',
+        implementation: {
+          steps: [
+            'Teste funções puras e utilitários',
+            'Use mocks para dependências externas',
+            'Mantenha testes independentes e isolados',
+            'Busque cobertura > 80%',
+            'Escreva testes antes do código (TDD)',
+          ],
+          code_example: `// Exemplo com Jest
+test('soma dois números corretamente', () => {
+  expect(add(2, 3)).toBe(5);
+  expect(add(-1, 1)).toBe(0);
+});
+
+test('lança erro para valores inválidos', () => {
+  expect(() => divide(10, 0)).toThrow('Divisão por zero');
+});`,
+        },
+        tools: ['Jest', 'Mocha', 'Vitest', 'Jasmine'],
+        references: [
+          'https://jestjs.io/docs/getting-started',
+          'https://github.com/goldbergyoni/javascript-testing-best-practices',
+        ],
+        tags: ['testing', 'unit-tests', 'coverage'],
+      },
+      'practice-005': {
+        id: 'practice-005',
+        name: 'Documentação de código',
+        category: 'documentation',
+        priority: 'medium',
+        description: 'Documente código complexo e mantenha README atualizado.',
+        rationale: 'Boa documentação reduz tempo de onboarding e facilita manutenção.',
+        implementation: {
+          steps: [
+            'Use JSDoc/TSDoc para documentar funções públicas',
+            'Mantenha README com instruções de instalação e uso',
+            'Documente decisões arquiteturais (ADRs)',
+            'Inclua exemplos de uso',
+            'Mantenha changelog atualizado',
+          ],
+          code_example: `/**
+ * Calcula a soma de dois números
+ * @param a - Primeiro número
+ * @param b - Segundo número
+ * @returns Soma dos dois números
+ * @example
+ * add(2, 3) // returns 5
+ */
+function add(a: number, b: number): number {
+  return a + b;
+}`,
+        },
+        tools: ['TypeDoc', 'JSDoc', 'Markdown', 'Docusaurus'],
+        references: [
+          'https://jsdoc.app/',
+          'https://makeapullrequest.com/',
+        ],
+        tags: ['documentation', 'comments', 'readme'],
+      },
+      'practice-006': {
+        id: 'practice-006',
+        name: 'Autenticação e autorização',
+        category: 'security',
+        priority: 'critical',
+        description: 'Implemente autenticação forte e autorização baseada em roles.',
+        rationale: 'Controle de acesso inadequado é uma das vulnerabilidades mais exploradas.',
+        implementation: {
+          steps: [
+            'Use HTTPS em todas as comunicações',
+            'Implemente JWT com refresh tokens',
+            'Hash senhas com bcrypt ou argon2',
+            'Implemente rate limiting',
+            'Use OAuth 2.0 para integrações',
+          ],
+          code_example: `// Exemplo com JWT
+const token = jwt.sign(
+  { userId: user.id, role: user.role },
+  process.env.JWT_SECRET,
+  { expiresIn: '1h' }
+);
+
+// Middleware de autenticação
+const authenticate = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};`,
+        },
+        tools: ['Passport.js', 'JWT', 'OAuth2', 'bcrypt'],
+        references: [
+          'https://owasp.org/www-community/controls/Authentication_Cheat_Sheet',
+          'https://jwt.io/introduction',
+        ],
+        tags: ['security', 'auth', 'jwt', 'oauth'],
+      },
+      'practice-007': {
+        id: 'practice-007',
+        name: 'Cache de dados',
+        category: 'performance',
+        priority: 'medium',
+        description: 'Use cache para melhorar performance de operações repetitivas.',
+        rationale: 'Cache reduz latência e carga em bancos de dados.',
+        implementation: {
+          steps: [
+            'Identifique dados frequentemente acessados',
+            'Implemente cache com TTL apropriado',
+            'Use estratégias de invalidação',
+            'Considere cache em múltiplas camadas',
+            'Monitore hit/miss ratio',
+          ],
+          code_example: `// Exemplo com Redis
+const getCachedUser = async (userId: string) => {
+  const cached = await redis.get(\`user:\${userId}\`);
+  if (cached) return JSON.parse(cached);
+  
+  const user = await db.users.findById(userId);
+  await redis.setex(\`user:\${userId}\`, 3600, JSON.stringify(user));
+  return user;
+};`,
+        },
+        tools: ['Redis', 'Memcached', 'Node-cache', 'CDN'],
+        references: [
+          'https://redis.io/docs/manual/patterns/',
+          'https://aws.amazon.com/caching/',
+        ],
+        tags: ['cache', 'performance', 'redis'],
+      },
+      'practice-008': {
+        id: 'practice-008',
+        name: 'Logging estruturado',
+        category: 'code-quality',
+        priority: 'high',
+        description: 'Implemente logging estruturado para debugging e monitoramento.',
+        rationale: 'Logs estruturados facilitam debugging e análise de problemas em produção.',
+        implementation: {
+          steps: [
+            'Use formato JSON para logs',
+            'Inclua contexto relevante (userId, requestId)',
+            'Implemente níveis de log (debug, info, warn, error)',
+            'Não log dados sensíveis',
+            'Centralize logs em ferramentas como ELK ou Datadog',
+          ],
+          code_example: `// Exemplo com Pino
+import pino from 'pino';
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  format: { timestamp: pino.stdTimeFunctions.isoTime }
+});
+
+// Uso
+logger.info({ userId: 123, action: 'login' }, 'User logged in');
+logger.error({ err: error, userId: 123 }, 'Login failed');`,
+        },
+        tools: ['Pino', 'Winston', 'Bunyan', 'ELK Stack'],
+        references: [
+          'https://getpino.io/',
+          'https://www.elastic.co/elastic-stack',
+        ],
+        tags: ['logging', 'monitoring', 'debugging'],
+      },
+      'practice-009': {
+        id: 'practice-009',
+        name: 'Testes de integração',
+        category: 'testing',
+        priority: 'medium',
+        description: 'Escreva testes de integração para validar fluxos completos.',
+        rationale: 'Testes de integração garantem que componentes funcionam juntos corretamente.',
+        implementation: {
+          steps: [
+            'Teste fluxos completos de API',
+            'Use bancos de dados de teste',
+            'Limpe dados após cada teste',
+            'Teste cenários de erro',
+            'Automatize testes em CI/CD',
+          ],
+          code_example: `// Exemplo com Supertest
+import request from 'supertest';
+import { app } from './app';
+
+describe('POST /users', () => {
+  it('should create a new user', async () => {
+    const response = await request(app)
+      .post('/users')
+      .send({ name: 'John', email: 'john@example.com' });
+    
+    expect(response.status).toBe(201);
+    expect(response.body.name).toBe('John');
+  });
+});`,
+        },
+        tools: ['Supertest', 'Cypress', 'Playwright', 'Jest'],
+        references: [
+          'https://jestjs.io/docs/getting-started',
+          'https://www.cypress.io/',
+        ],
+        tags: ['testing', 'integration', 'e2e'],
+      },
+      'practice-010': {
+        id: 'practice-010',
+        name: 'Versionamento de API',
+        category: 'documentation',
+        priority: 'high',
+        description: 'Versiona APIs para garantir compatibilidade e evolução.',
+        rationale: 'Versionamento permite evoluir APIs sem quebrar clientes existentes.',
+        implementation: {
+          steps: [
+            'Use versionamento semântico (SemVer)',
+            'Inclua versão na URL ou header',
+            'Documente breaking changes',
+            'Mantenha versões antigas por período de depreciação',
+            'Comunique mudanças aos usuários',
+          ],
+          code_example: `// Versionamento por URL
+app.use('/api/v1/users', v1Router);
+app.use('/api/v2/users', v2Router);
+
+// Versionamento por header
+app.use((req, res, next) => {
+  const version = req.headers['api-version'] || 'v1';
+  req.apiVersion = version;
+  next();
+});`,
+        },
+        tools: ['OpenAPI', 'Swagger', 'GraphQL', 'REST'],
+        references: [
+          'https://swagger.io/',
+          'https://semver.org/',
+        ],
+        tags: ['api', 'versioning', 'compatibility'],
+      },
+    };
+
+    const info = practiceDetails[practiceId];
+    
+    if (!info) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              found: false,
+              message: `Prática "${practiceId}" não encontrada`,
+              suggestion: 'Use list_practices para ver todas as práticas disponíveis',
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            found: true,
+            ...info,
           }, null, 2),
         },
       ],

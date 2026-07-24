@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  salt          String
+  firstName     String?
+  lastName      String?
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
+  role          Role      @default(USER)
+  tenantId      String?
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  sessions      Session[]
+  apiKeys       ApiKey[]
+  auditLogs     AuditLog[]
+  permissions   UserPermission[]
+  @@index([email])
+  @@index([username])
+  @@index([tenantId])
+}
+
+model Tenant {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  isActive    Boolean  @default(true)
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+  plugins     Plugin[]
+  apiKeys     ApiKey[]
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  token       String   @unique
+  refreshToken String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ipAddress   String?
+  userAgent   String?
+  @@index([userId])
+  @@index([token])
+}
+
+model ApiKey {
+  id          String   @id @default(uuid())
+  name        String
+  keyHash     String
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  permissions String[]
+  scopes      String[]
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([keyHash])
+  @@index([userId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  permissions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserPermission {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  permission  String
+  resource    String?
+  granted     Boolean  @default(true)
+  grantedBy   String?
+  createdAt   DateTime @default(now())
+  @@index([userId])
+}
+
+model Plugin {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  version     String
+  description String?
+  author      String?
+  enabled     Boolean  @default(true)
+  config      Json?
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  tools       PluginTool[]
+  resources   PluginResource[]
+  prompts     PluginPrompt[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([tenantId])
+}
+
+model PluginTool {
+  id          String   @id @default(uuid())
+  pluginId    String
+  plugin      Plugin   @relation(fields: [pluginId], references: [id])
+  name        String
+  description String?
+  schema      Json
+  createdAt   DateTime @default(now())
+}
+
+model PluginResource {
+  id          String   @id @default(uuid())
+  pluginId    String
+  plugin      Plugin   @relation(fields = [pluginId], references: [id])
+  name        String
+  uri         String
+  description String?
+  createdAt   DateTime @default(now())
+}
+
+model PluginPrompt {
+  id          String   @id @default(uuid())
+  pluginId    String
+  plugin      Plugin   @relation(fields = [pluginId], references: [id])
+  name        String
+  description String?
+  template    String
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields = [userId], references: [id])
+  action      String
+  resource    String?
+  resourceId  String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model CacheEntry {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([key])
+  @@index([expiresAt])
+}
+
+model ToolExecution {
+  id          String   @id @default(uuid())
+  toolName    String
+  args        Json
+  result      Json?
+  durationMs  Int
+  success     Boolean
+  userId      String?
+  error       String?
+  createdAt   DateTime @default(now())
+  @@index([toolName])
+  @@index([createdAt])
+}
+
+model PromptExecution {
+  id          String   @id @default(uuid())
+  promptName  String
+  variables   Json
+  result      String?
+  durationMs  Int
+  success     Boolean
+  userId      String?
+  error       String?
+  createdAt   DateTime @default(now())
+  @@index([promptName])
+  @@index([createdAt])
+}
+</arg_value>
+<task_progress>
+- [x] Stop running server
+- [x] Create new project structure following Clean Architecture
+- [x] Update package.json with modern dependencies
+- [x] Create tsconfig.json
+- [x] Create .env.example
+- [x] Create .eslintrc.json
+- [x] Create .prettierrc
+- [x] Create .gitignore
+- [x] Create Dockerfile
+- [x] Create docker-compose.yml
+- [x] Create .dockerignore
+- [x] Create prisma/schema.prisma
+- [ ] Create configuration files
+- [ ] Implement core infrastructure (config, logger, events, cache)
+- [ ] Implement database layer with Prisma
+- [ ] Implement authentication and security
+- [ ] Implement tool system with dynamic registration
+- [ ] Implement resource system
+- [ ] Implement prompt system
+- [ ] Implement plugin system
+- [ ] Implement existing tools (patches, modules, practices, web search)
+- [ ] Implement CLI
+- [ ] Create Docker configuration
+- [ ] Add tests
+- [ ] Update documentation
+</task_progress>
+</write_file></tool_call>
